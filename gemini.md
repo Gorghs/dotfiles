@@ -549,3 +549,29 @@ Performed a deep log and health inspection across Hyprland, Wayland portals, Neo
   - Modified active theme `~/.config/waybar/style/[Dark] Purpl.css` and all 47 alternative themes in `~/.config/waybar/style/*.css` to remove the blinking animation properties from `#battery` styles while preserving the static critical red warning color (`color: #f53c3c`) and other UI animations.
   - Backup created at `~/.config/waybar/style.bak.20261011102131/`.
   - Reloaded live Waybar CSS styling via `killall -SIGUSR2 waybar`.
+
+---
+
+## Post-Boot Power Audit Results (October 11, 2026)
+
+### 1. Active Power Consumption
+- **Power Source**: Battery (`Discharging`, AC unplugged).
+- **Discharge Rate**: **~16.1 W** actively powering the laptop under desktop load (down from the initial **~29 W** before optimizations, a ~45% power reduction).
+- **Battery Health**: `92.02%` (52.45 Wh full capacity vs 57.00 Wh design capacity).
+
+### 2. Subsystem State Verification
+| Subsystem | Setting / State | Status |
+| :--- | :--- | :---: |
+| **Linux Kernel** | Upgraded to `7.2.8-arch1-2` (Clean UEFI boot, `s2idle`) | **PASS** |
+| **CPU Governor** | `powersave` across all cores | **PASS** |
+| **CPU EPP** | `balance_power` on battery (no longer forced to `performance`) | **PASS** |
+| **Wi-Fi Power Save** | `Power save: on` on interface `wlan0` | **PASS** |
+| **PCIe ASPM** | `powersupersave` active via TLP on battery | **PASS** |
+| **PCI Power Control** | `auto` on NVIDIA dGPU (`0000:02:00.0`) and PCIe bridge (`0000:00:06.2`) | **PASS** |
+| **Waybar Battery Blinking** | Removed across all 48 styles; solid warning color active | **PASS** |
+| **Initramfs Integration** | Rebuilt via `dracut-rebuild` with persistent `NVreg_DynamicPowerManagement=0x02` | **PASS** |
+
+### 3. NVIDIA dGPU Dynamic Power Observations
+- **Device Nodes**: Aquamarine/Hyprland successfully binds display output strictly to `/dev/dri/card1` (Intel Iris Xe).
+- **Driver Status**: `/proc/driver/nvidia/gpus/0000:02:00.0/power` confirms `Video Memory Off: Supported` and `Platform Support: Supported`.
+- **Initramfs Update**: Because early boot loads NVIDIA kernel modules into the initial RAM disk, `dracut-rebuild` was executed so the fine-grained runtime dynamic power management parameters are baked into the boot image for subsequent reboots.
